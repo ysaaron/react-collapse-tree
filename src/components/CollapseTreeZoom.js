@@ -28,6 +28,7 @@ class CollapseTree extends React.Component {
     });
 
     this.state = {
+      isDragging: false,
       tree: tree,
       nodes: nodes,
       links: links,
@@ -38,14 +39,27 @@ class CollapseTree extends React.Component {
   render() {
     return (
       <SvgChart height={this.props.height}
-                width={this.props.width}>
+                width={this.props.width}
+                blockZooming={this.state.isDragging}>
         <Links linkData={this.state.links}
                 startingNode={this.state.sourceNode} />
         <Nodes nodeData={this.state.nodes}
+                startingNode={this.state.sourceNode}
                 onNodeClick={this._onNodeClick.bind(this)}
-                startingNode={this.state.sourceNode} />
+                onNodeDrag={this._onNodeDrag.bind(this)} />
       </SvgChart>
     );
+  }
+
+  _onNodeDrag(node, isDragging) {
+    if(isDragging)
+      this.setState({
+        isDragging: isDragging
+      });
+    else
+      this.setState({
+        isDragging: isDragging
+      });
   }
 
   _onNodeClick(node) {

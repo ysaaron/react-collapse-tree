@@ -1,10 +1,15 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 import { DragSource, DropTarget } from 'react-dnd';
 import d3 from 'd3';
 
 let nodeDragSource = {
-  beginDrag: function (props, monitor, component) {
-    return {};
+  beginDrag: (props, monitor, component) => {
+    props.onNodeDrag(props.nodeData, true);
+    return props.nodeData;
+  },
+  endDrag: (props, monitor, component) => {
+    props.onNodeDrag(props.nodeData, false);
   }
 };
 
@@ -16,21 +21,22 @@ function dragCollect(connect, monitor) {
   };
 };
 
-let nodeDropSource = {
+let dropNodeTarget = {
   canDrop: function (props, monitor) {
-    return true;
+    console.log(monitor.getItem());
+    return props.nodeData.id !== monitor.getItem().id;
+  },
+  drop: function(props, monitor, component) {
+    console.log(props);
+    return props;
   }
 };
 
-function dropCollect(connect, monitor) {
+function collect(connect, monitor) {
   return {
-    connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver(),
-    isOverCurrent: monitor.isOver({ shallow: true }),
-    canDrop: monitor.canDrop(),
-    itemType: monitor.getItemType()
+    connectDropTarget: connect.dropTarget()
   };
-};
+}
 
 export default (WrapperedComponent, events) => {
   class Wrapper extends Component {
@@ -42,14 +48,19 @@ export default (WrapperedComponent, events) => {
     }
 
     render() {
-      let connectToDrag = this.props.connectDragSource;
+      let {
+        connectDragSource,
+        connectDropTarget
+      } = this.props
       let transform = this._getTranslate();
-    	return connectToDrag(
+      let source = connectDragSource(
       		<g onClick={this._testOnClick}
               transform={transform}>
       			<text>789</text>
       		</g>
-	    );
+        );
+
+      return connectDropTarget(source);
     }
 
     _testOnClick() {
@@ -59,10 +70,16 @@ export default (WrapperedComponent, events) => {
     }
 
     _getTranslate() {
-      let x, y;
+      let x = 0, y = 0;
       if(this.props.isDragging) {
-        x = this.props.transformY + this.props.getDifferenceFromInitialOffset.x;
-        y = this.props.transformX + this.props.getDifferenceFromInitialOffset.y;
+        let offsetX = 0, offsetY = 0;
+        if(this.props.getDifferenceFromInitialOffset !== null){
+          offsetX = this.props.getDifferenceFromInitialOffset.x;
+          offsetY = this.props.getDifferenceFromInitialOffset.y;
+        }
+
+        x = this.props.transformY + offsetX;
+        y = this.props.transformX + offsetY;
       } else {
         x = this.props.transformY;
         y = this.props.transformX;
@@ -73,11 +90,42 @@ export default (WrapperedComponent, events) => {
   }
 
   Wrapper.propsTypes = {
-    _toggleNode: React.PropTypes.func.isRequired,
+    onNodeClick: React.PropTypes.func.isRequired,
+    onNodeDrag: React.PropTypes.func,
     nodeData: React.PropTypes.object.isRequired
   };
 
-  let source = DragSource('Node', nodeDragSource, dragCollect)(Wrapper);
+  Wrapper.defaultProps = {
+    onNodeDrag: () => false
+  }
 
-  return source;
+  class DropContainer extends Component {
+    constructor(props) {
+      super(props)
+    }
+
+    render() {
+      let {
+        connectDropTarget
+      } = this.props;
+
+      return connectDropTarget(
+        <g
+        transform={`translate(${this.props.y}, ${this.props.x})`}
+        style={{
+          opacity: 0
+        }}>
+          <text>789</text>
+        </g>
+      )
+    }
+  }
+
+  let source = DragSource('Node', nodeDragSource, dragCollect)(Wrapper);
+  return DropTarget('Node', dropNodeTarget, collect)(source)
+
+  // return {
+  //   DragWrapper: ,
+  //   DropWrapper:
+  // };
 }

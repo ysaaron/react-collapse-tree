@@ -3,10 +3,13 @@ import { TransitionMotion, spring } from 'react-motion';
 
 import connectToNodes from '../utils/connectToNodes';
 
-let Wrapper = connectToNodes();
+let DragWrapper = connectToNodes();
+// {
+//   DragWrapper,
+//   DropWrapper
+// }
 
-export default
- class Nodes extends React.Component {
+export default class Nodes extends React.Component {
   constructor(props) {
     super(props);
 
@@ -17,41 +20,50 @@ export default
   }
 
   render() {
+    // let dropContainer = this.props.nodeData.map((node) => {
+    //   return <DropWrapper
+    //             key={node.id}
+    //             x={node.x}
+    //             y={node.y}
+    //             id={node.id} />
+    // })
+
+    // <g>
+    // {dropContainer}
+    // </g>
     return (
-      <TransitionMotion
-        willLeave={this._willLeave}
-        willEnter={this._willEnter}
-        styles={this._getStyles}
-        defaultStyles={this._getDefaultStyles()}>
-        {
-          (interpolatedStyles) => {
-            return this._renderNodes(interpolatedStyles);
+      <g>
+        <TransitionMotion
+          willLeave={this._willLeave}
+          willEnter={this._willEnter}
+          styles={this._getStyles}
+          defaultStyles={this._getDefaultStyles()}>
+          {
+            (interpolatedStyles) => {
+              return this._renderNodes(interpolatedStyles);
+            }
           }
-        }
-      </TransitionMotion>
+        </TransitionMotion>
+      </g>
     );
   }
 
   _renderNodes(interpolatedStyles) {
     let {
       nodeData,
-      onNodeClick
+      onNodeClick,
+      onNodeDrag
     } = this.props;
-
-    // <g key={config.key}
-    //     transform={`translate(${config.style.y}, ${config.style.x})`}
-    //     onClick={() => onNodeClick(config.data)}>
-    //   <text>123</text>
-    // </g>
 
     let nodes = interpolatedStyles.map((config) => {
       return (
-        <Wrapper
-          key={config.key}
-          _toggleNode={onNodeClick}
-          nodeData={config.data}
-          transformX={config.style.x}
-          transformY={config.style.y} />
+          <DragWrapper
+            key={config.key}
+            onNodeClick={onNodeClick}
+            onNodeDrag={onNodeDrag}
+            nodeData={config.data}
+            transformX={config.style.x}
+            transformY={config.style.y} />
       );
     });
 

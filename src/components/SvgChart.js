@@ -6,24 +6,20 @@ export default class SvgChart extends React.Component {
   constructor(props) {
     super(props);
 
+    this._onZoom = this._onZoom.bind(this);
     this.state = {
-      scale: null,
-      translate: null
+      scale: 1,
+      translate: [0, 0]
     };
   }
 
   componentDidMount() {
-    var zoom = d3.behavior.zoom()
-      .scaleExtent(this.props.scaleExtent)
-      .on('zoom', () => {
-        this.setState({
-          scale: zoom.scale(),
-          translate: zoom.translate()
-        });
-      })
+    this.zoom = d3.behavior.zoom()
+                .scaleExtent(this.props.scaleExtent)
+                .on('zoom', this._onZoom);
 
     d3.select(ReactDOM.findDOMNode(this.refs.zoomChart))
-      .call(zoom);
+      .call(this.zoom);
   }
 
   render() {
@@ -39,10 +35,21 @@ export default class SvgChart extends React.Component {
       </svg>
     );
   }
+
+  _onZoom() {
+    if(!this.props.blockZooming) {
+      this.setState({
+        scale: this.zoom.scale(),
+        translate: this.zoom.translate()
+      });
+    } else {
+      this.zoom.translate(this.state.translate);
+    }
+  }
 };
 
 SvgChart.defaultProps = {
-  onZoom: () => {},
+  blockZooming: false,
   scaleExtent: [1, 10],
   width: 1000,
   height: 1000
