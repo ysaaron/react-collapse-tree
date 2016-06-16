@@ -32,18 +32,18 @@ export default class Links extends React.Component {
   }
 
   _willEnter(styleThatEntered) {
-    let startingNode = this.props.startingNode;
+    let eventNode = this.props.eventNode;
 
     return {
-      x0: startingNode.x0,
-      y0: startingNode.y0,
-      x: startingNode.x0,
-      y: startingNode.y0
+      x0: eventNode.x0,
+      y0: eventNode.y0,
+      x: eventNode.x0,
+      y: eventNode.y0
     };
   }
 
   _willLeave() {
-    let startingNode = this.props.startingNode;
+    let eventNode = this.props.eventNode;
 
     return {
       x0: spring(startingNode.x),
@@ -54,14 +54,14 @@ export default class Links extends React.Component {
   }
 
   _getDefaultStyles() {
-    let startingNode = this.props.startingNode;
+    let eventNode = this.props.eventNode;
 
-    return this.props.linkData.map((link) => {
+    return this.props.linksData.map((link) => {
       let style = {
-        x0: startingNode.x0,
-        y0: startingNode.y0,
-        x: startingNode.x0,
-        y: startingNode.y0
+        x0: eventNode.x0,
+        y0: eventNode.y0,
+        x: eventNode.x0,
+        y: eventNode.y0
       };
 
       return {
@@ -73,7 +73,7 @@ export default class Links extends React.Component {
   }
 
   _getStyles() {
-    return this.props.linkData.map((link) => {
+    return this.props.linksData.map((link) => {
       let style = {
         x0: spring(link.source.x),
         y0: spring(link.source.y),
@@ -106,8 +106,7 @@ export default class Links extends React.Component {
 
       return (
         <path key={config.key}
-              d={d}>
-        </path>
+              d={d} />
       );
     });
 
@@ -120,7 +119,7 @@ export default class Links extends React.Component {
 }
 
 Links.propsTypes = {
-  linkData: React.PropTypes.array,
-  sourceNode: React.PropTypes.object,
-  startingNode: React.PropTypes.object
+  linksData: React.PropTypes.array.isRequired,
+  eventNode: React.PropTypes.object.isRequired,
+  isDragging: React.PropTypes.bool.isRequired
 };

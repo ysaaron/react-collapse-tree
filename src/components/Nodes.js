@@ -3,44 +3,51 @@ import { TransitionMotion, spring } from 'react-motion';
 
 import connectToNodes from '../utils/connectToNodes';
 
-let DragWrapper = connectToNodes();
-// {
-//   DragWrapper,
-//   DropWrapper
-// }
+class TestingNode extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  componentDidMount() {
+  }
+
+  render() {
+    return (
+      <g>
+        {/*<rect width={20}
+              height={20}
+              style={{
+                "file": "rgb(0,0,255)",
+                "strokeWidth": "3",
+                "stroke": "rgb(0,0,87)"
+              }}></rect>*/}
+          <text>159</text>
+      </g>
+    );
+  }
+}
+
+
+let DragWrapper = connectToNodes(TestingNode);
 
 export default class Nodes extends React.Component {
   constructor(props) {
     super(props);
 
-    this._willEnter = this._willEnter.bind(this);
-    this._willLeave = this._willLeave.bind(this);
-    this._getDefaultStyles = this._getDefaultStyles.bind(this);
-    this._getStyles = this._getStyles.bind(this);
+    this.getDefaultStyles = this.getDefaultStyles.bind(this);
   }
 
   render() {
-    // let dropContainer = this.props.nodeData.map((node) => {
-    //   return <DropWrapper
-    //             key={node.id}
-    //             x={node.x}
-    //             y={node.y}
-    //             id={node.id} />
-    // })
-
-    // <g>
-    // {dropContainer}
-    // </g>
     return (
       <g>
         <TransitionMotion
-          willLeave={this._willLeave}
-          willEnter={this._willEnter}
-          styles={this._getStyles}
-          defaultStyles={this._getDefaultStyles()}>
+          willLeave={this.willLeave.bind(this)}
+          willEnter={this.willEnter.bind(this)}
+          styles={this.getStyles.bind(this)}
+          defaultStyles={this.getDefaultStyles()}>
           {
             (interpolatedStyles) => {
-              return this._renderNodes(interpolatedStyles);
+              return this.renderNodes(interpolatedStyles);
             }
           }
         </TransitionMotion>
@@ -48,11 +55,14 @@ export default class Nodes extends React.Component {
     );
   }
 
-  _renderNodes(interpolatedStyles) {
+  renderNodes(interpolatedStyles) {
     let {
-      nodeData,
+      nodesData,
       onNodeClick,
-      onNodeDrag
+      onNodeBeginDrag,
+      onNodeEndDrag,
+      onNodeDrop,
+      onNodeDidDrop
     } = this.props;
 
     let nodes = interpolatedStyles.map((config) => {
@@ -60,7 +70,10 @@ export default class Nodes extends React.Component {
           <DragWrapper
             key={config.key}
             onNodeClick={onNodeClick}
-            onNodeDrag={onNodeDrag}
+            onNodeBeginDrag={onNodeBeginDrag}
+            onNodeEndDrag={onNodeEndDrag}
+            onNodeDrop={onNodeDrop}
+            onNodeDidDrop={onNodeDidDrop}
             nodeData={config.data}
             transformX={config.style.x}
             transformY={config.style.y} />
@@ -74,8 +87,8 @@ export default class Nodes extends React.Component {
     );
   }
 
-  _willEnter(styleThatEntered) {
-    let startingNode = this.props.startingNode;
+  willEnter(styleThatEntered) {
+    let startingNode = this.props.eventNode;
 
     return {
       x: startingNode.x0,
@@ -83,32 +96,32 @@ export default class Nodes extends React.Component {
     };
   }
 
-  _willLeave() {
-    let startingNode = this.props.startingNode;
+  willLeave() {
+    let eventNode = this.props.eventNode;
 
     return {
-      x: spring(startingNode.x),
-      y: spring(startingNode.y)
+      x: spring(eventNode.x),
+      y: spring(eventNode.y)
     };
   }
 
-  _getDefaultStyles() {
-    let startingNode = this.props.startingNode;
+  getDefaultStyles() {
+    let eventNode = this.props.eventNode;
 
-    return this.props.nodeData.map((node) => {
+    return this.props.nodesData.map((node) => {
       return {
         key: `${node.id}`,
         style: {
-          x: startingNode.x0,
-          y: startingNode.y0
+          x: eventNode.x0,
+          y: eventNode.y0
         },
         data: node
       };
     });
   }
 
-  _getStyles() {
-    return this.props.nodeData.map((node) => {
+  getStyles() {
+    return this.props.nodesData.map((node) => {
       let key = node.id;
       let style = {
         x: spring(node.x),
@@ -126,7 +139,11 @@ export default class Nodes extends React.Component {
 
 Nodes.propTypes = {
   duration: React.PropTypes.number,
-  projection: React.PropTypes.func,
-  nodeData: React.PropTypes.array.isRequired,
-  startingNode: React.PropTypes.object.isRequired
+  nodesData: React.PropTypes.array.isRequired,
+  eventNode: React.PropTypes.object.isRequired,
+  onNodeClick: React.PropTypes.func.isRequired,
+  onNodeBeginDrag: React.PropTypes.func.isRequired,
+  onNodeEndDrag: React.PropTypes.func.isRequired,
+  onNodeDrop: React.PropTypes.func.isRequired,
+  onNodeDidDrop: React.PropTypes.func.isRequired
 };

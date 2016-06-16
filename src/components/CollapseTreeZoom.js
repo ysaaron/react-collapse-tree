@@ -7,10 +7,6 @@ import SvgChart from './SvgChart';
 import Links from './Links';
 import Nodes from './Nodes';
 
-let treeLayout = function function_name(argument) {
-  // body...
-}
-
 class CollapseTree extends React.Component {
   constructor(props) {
     super(props);
@@ -20,7 +16,7 @@ class CollapseTree extends React.Component {
         links = tree.links(nodes);
 
     nodes.forEach((d, index) => {
-      d._children = undefined;
+      d.children = undefined;
       d.id = index;
       d.y = d.depth * 180;
       d.x0 = d.x;
@@ -32,7 +28,7 @@ class CollapseTree extends React.Component {
       tree: tree,
       nodes: nodes,
       links: links,
-      sourceNode: nodes[0]
+      eventNode: nodes[0]
     };
   }
 
@@ -41,28 +37,43 @@ class CollapseTree extends React.Component {
       <SvgChart height={this.props.height}
                 width={this.props.width}
                 blockZooming={this.state.isDragging}>
-        <Links linkData={this.state.links}
-                startingNode={this.state.sourceNode} />
-        <Nodes nodeData={this.state.nodes}
-                startingNode={this.state.sourceNode}
-                onNodeClick={this._onNodeClick.bind(this)}
-                onNodeDrag={this._onNodeDrag.bind(this)} />
+        <Links linksData={this.state.links}
+                eventNode={this.state.eventNode}
+                isDragging={this.state.isDragging} />
+        <Nodes nodesData={this.state.nodes}
+                eventNode={this.state.eventNode}
+                onNodeClick={this.onNodeClick.bind(this)}
+                onNodeBeginDrag={this.onNodeBeginDrag.bind(this)}
+                onNodeEndDrag={this.onNodeEndDrag.bind(this)}
+                onNodeDrop={this.onNodeDrop.bind(this)}
+                onNodeDidDrop={this.onNodeDidDrop.bind(this)} />
       </SvgChart>
     );
   }
 
-  _onNodeDrag(node, isDragging) {
-    if(isDragging)
-      this.setState({
-        isDragging: isDragging
-      });
-    else
-      this.setState({
-        isDragging: isDragging
-      });
+  onNodeBeginDrag(node) {
+    this.setState({
+      isDragging: true
+    });
   }
 
-  _onNodeClick(node) {
+  onNodeEndDrag(node) {
+    this.setState({
+      isDragging: false
+    });
+  }
+
+  onNodeDrop(draggedNode, offset) {
+    console.log(draggedNode);
+    console.log(offset);
+  }
+
+  onNodeDidDrop(droppedNode, draggedNode) {
+    console.log(droppedNode);
+    console.log(draggedNode);
+  }
+
+  onNodeClick(node) {
     var tmpNodes = this.state.nodes.slice();
     var index = tmpNodes.indexOf(node);
     var isUpdated = true;
@@ -71,11 +82,11 @@ class CollapseTree extends React.Component {
       return;
 
     if(!!tmpNodes[index].children) {
-      tmpNodes[index]._children = tmpNodes[index].children;
+      tmpNodes[index].children = tmpNodes[index].children;
       tmpNodes[index].children = undefined;
-    } else if(!!tmpNodes[index]._children) {
-      tmpNodes[index].children = tmpNodes[index]._children;
-      tmpNodes[index]._children = undefined;
+    } else if(!!tmpNodes[index].children) {
+      tmpNodes[index].children = tmpNodes[index].children;
+      tmpNodes[index].children = undefined;
     } else {
       isUpdated = false;
     }
