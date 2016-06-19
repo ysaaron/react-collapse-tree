@@ -24,7 +24,7 @@
     "d3",
     "tree"
   ],
-  "author": "Your name here",
+  "author": "Aaron Young",
   "devDependencies": {
     "babel-core": "^6.0.0",
     "babel-eslint": "^6.0.0",

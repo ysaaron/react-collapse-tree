@@ -46,10 +46,10 @@ export default class Links extends React.Component {
     let eventNode = this.props.eventNode;
 
     return {
-      x0: spring(startingNode.x),
-      y0: spring(startingNode.y),
-      x: spring(startingNode.x),
-      y: spring(startingNode.y)
+      x0: spring(eventNode.x),
+      y0: spring(eventNode.y),
+      x: spring(eventNode.x),
+      y: spring(eventNode.y)
     };
   }
 
@@ -103,9 +103,14 @@ export default class Links extends React.Component {
         source: source,
         target: target
       });
+      let isParent = this.props.isDragging ? (this.props.eventNode.id == config.data.target.id) : false;
+      let isDisplay = config.data.target.isDisplay && !isParent;
 
       return (
         <path key={config.key}
+              style={{
+                display: isDisplay ? '' : 'none'
+              }}
               d={d} />
       );
     });

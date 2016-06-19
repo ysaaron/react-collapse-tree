@@ -3,8 +3,8 @@ import { DragSource, DropTarget } from 'react-dnd';
 import d3 from 'd3';
 
 let nodeDragSource = {
-  canDrag: () => {
-    return true;
+  canDrag: (props, monitor) => {
+    return typeof(props.nodeData.parent) !== 'string';
   },
   beginDrag: (props, monitor, component) => {
     props.onNodeBeginDrag(props.nodeData);
@@ -26,7 +26,6 @@ function dragCollect(connect, monitor) {
 
 let dropNodeTarget = {
   canDrop: function (props, monitor) {
-    props.onNodeDrop(props, monitor.getDifferenceFromInitialOffset())
     return props.nodeData.id !== monitor.getItem().id;
   },
   drop: function(props, monitor, component) {
@@ -51,21 +50,30 @@ export default (DecoratedComponent) => {
       this.getTranslate = this.getTranslate.bind(this);
 
       this.state = {
-        isClicking: true
+        isClick: true
       };
     }
 
     render() {
+      //onClick={() => { onNodeClick(nodeData) }}
+      /**/
       let {
         connectDragSource,
-        connectDropTarget
+        connectDropTarget,
+        onNodeClick,
+        isDragging,
+        nodeData
       } = this.props
+      // console.log(this.props.nodeData)
       let transform = this.getTranslate();
       let component = connectDragSource(
       		<g transform={transform}
-              onMouseDown={this.onMouseDown.bind(this)}
-              onMouseMove={this.onMouseMove.bind(this)}
-              onMouseUp={this.onMouseUp.bind(this)}>
+            style={{
+              display: nodeData.isDisplay ? '' : 'none'
+            }}
+            onMouseDown={this.onMouseDown.bind(this)}
+            onMouseMove={this.onMouseMove.bind(this)}
+            onMouseUp={this.onMouseUp.bind(this)}>
       			<DecoratedComponent
                 {...this.props}
                 {...this.state} />
@@ -113,13 +121,13 @@ export default (DecoratedComponent) => {
         });
       }
     }
+
   }
 
   Wrapper.propsTypes = {
     onNodeClick: React.PropTypes.func.isRequired,
     onNodeBeginDrag: React.PropTypes.func.isRequired,
     onNodeEndDrag: React.PropTypes.func.isRequired,
-    onNodeDrop: React.PropTypes.func.isRequired,
     onNodeDidDrop: React.PropTypes.func.isRequired,
     nodeData: React.PropTypes.object.isRequired
   };

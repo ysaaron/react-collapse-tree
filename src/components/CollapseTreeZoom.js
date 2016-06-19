@@ -3,6 +3,8 @@ import d3 from 'd3';
 import { DragDropContext } from 'react-dnd';
 import MouseEventBackend from 'react-dnd-mouse-backend';
 
+import { walkThroughTree } from '../utils/walkThroughTree';
+
 import SvgChart from './SvgChart';
 import Links from './Links';
 import Nodes from './Nodes';
@@ -16,11 +18,12 @@ class CollapseTree extends React.Component {
         links = tree.links(nodes);
 
     nodes.forEach((d, index) => {
-      d.children = undefined;
+      d._children = undefined;
       d.id = index;
       d.y = d.depth * 180;
       d.x0 = d.x;
       d.y0 = d.y;
+      d.isDisplay = true;
     });
 
     this.state = {
@@ -45,80 +48,135 @@ class CollapseTree extends React.Component {
                 onNodeClick={this.onNodeClick.bind(this)}
                 onNodeBeginDrag={this.onNodeBeginDrag.bind(this)}
                 onNodeEndDrag={this.onNodeEndDrag.bind(this)}
-                onNodeDrop={this.onNodeDrop.bind(this)}
                 onNodeDidDrop={this.onNodeDidDrop.bind(this)} />
       </SvgChart>
     );
   }
 
   onNodeBeginDrag(node) {
+    walkThroughTree(node, (item) => { return item.children; }, (item) => { item.isDisplay = false; });
+
+    let {
+      x: endingX,
+      y: endingY
+    } = node;
+
     this.setState({
-      isDragging: true
+      isDragging: true,
+      nodes: this.state.nodes,
+      eventNode: {
+        id: node.id,
+        x: node.x,
+        y: node.y,
+        x0: endingX,
+        y0: endingY
+      }
     });
   }
 
   onNodeEndDrag(node) {
+    walkThroughTree(node, (item) => { return item.children; }, (item) => { item.isDisplay = true; });
+
     this.setState({
       isDragging: false
     });
   }
 
-  onNodeDrop(draggedNode, offset) {
-    console.log(draggedNode);
-    console.log(offset);
-  }
-
   onNodeDidDrop(droppedNode, draggedNode) {
-    console.log(droppedNode);
-    console.log(draggedNode);
+    let tmpNodes = this.state.nodes.slice();
+    let droppedIndex = tmpNodes.indexOf(droppedNode);
+    let draggedIndex = tmpNodes.indexOf(draggedNode);
+
+    if(droppedIndex == -1 || draggedIndex == -1)
+      return;
+    //move node to another node
+    if(!!tmpNodes[droppedIndex].children) {
+      droppedNode.children.push(draggedNode);
+    } else if(!!tmpNodes[droppedIndex]._children) {
+      droppedNode._children.push(draggedNode);
+    } else {
+      droppedNode.children = [];
+      droppedNode.children.push(draggedNode);
+    }
+
+    //remove draggedNode from parant
+    let indexInParant = draggedNode.parent.children.indexOf(draggedNode);
+    draggedNode.parent = draggedNode.parent.children.splice(indexInParant, 1);
+
+    let {
+      x: endingX,
+      y: endingY
+    } = droppedNode;
+
+    // tmpNodes.forEach((item) => {
+    //   item.x0 = item.x;
+    //   item.y0 = item.y;
+    // })
+
+    var newNodes = this.state.tree.nodes(this.props.source).map((d) => {
+      d.y = d.depth * 180;
+      return d;
+    });
+    let newLinks = this.state.tree.links(newNodes);
+    this.setState({
+      nodes: newNodes,
+      links: newLinks,
+      eventNode: {
+        id: droppedNode.id,
+        x: droppedNode.x,
+        y: droppedNode.y,
+        x0: endingX,
+        y0: endingY
+      }
+    });
   }
 
   onNodeClick(node) {
-    var tmpNodes = this.state.nodes.slice();
-    var index = tmpNodes.indexOf(node);
-    var isUpdated = true;
-
-    if(index == "-1")
-      return;
-
-    if(!!tmpNodes[index].children) {
-      tmpNodes[index].children = tmpNodes[index].children;
-      tmpNodes[index].children = undefined;
-    } else if(!!tmpNodes[index].children) {
-      tmpNodes[index].children = tmpNodes[index].children;
-      tmpNodes[index].children = undefined;
-    } else {
-      isUpdated = false;
-    }
-
-    if(isUpdated) {
-      let {
-        x: endingX,
-        y: endingY
-      } = node;
-
-      tmpNodes.forEach((item) => {
-        item.x0 = item.x;
-        item.y0 = item.y;
-      })
-
-      var newNodes = this.state.tree.nodes(this.props.source).map((d) => {
-        d.y = d.depth * 180;
-        return d;
-      });
-      var newLinks = this.state.tree.links(newNodes);
-
-      this.setState({
-        nodes: newNodes,
-        links: newLinks,
-        sourceNode: {
-          x: node.x,
-          y: node.y,
-          x0: endingX,
-          y0: endingY
-        }
-      });
-    }
+    // let tmpNodes = this.state.nodes.slice();
+    // let index = tmpNodes.indexOf(node);
+    // let isUpdated = true;
+    //
+    // if(index == -1)
+    //   return;
+    //
+    // if(!!tmpNodes[index].children) {
+    //   tmpNodes[index]._children = tmpNodes[index].children;
+    //   tmpNodes[index].children = undefined;
+    // } else if(!!tmpNodes[index]._children) {
+    //   tmpNodes[index].children = tmpNodes[index]._children;
+    //   tmpNodes[index]._children = undefined;
+    // } else {
+    //   isUpdated = false;
+    // }
+    //
+    // if(isUpdated) {
+    //   let {
+    //     x: endingX,
+    //     y: endingY
+    //   } = node;
+    //
+    //   tmpNodes.forEach((item) => {
+    //     item.x0 = item.x;
+    //     item.y0 = item.y;
+    //   })
+    //
+    //   var newNodes = this.state.tree.nodes(this.props.source).map((d) => {
+    //     d.y = d.depth * 180;
+    //     return d;
+    //   });
+    //   let newLinks = this.state.tree.links(newNodes);
+    //   this.setState({
+    //     nodes: newNodes,
+    //     links: newLinks,
+    //     eventNode: {
+    //       id: node.id,
+    //       x: node.x,
+    //       y: node.y,
+    //       x0: endingX,
+    //       y0: endingY
+    //     }
+    //   });
+    // }
   }
 };
 

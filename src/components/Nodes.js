@@ -8,20 +8,17 @@ class TestingNode extends React.Component {
     super(props);
   }
 
-  componentDidMount() {
-  }
-
   render() {
     return (
       <g>
-        {/*<rect width={20}
+        <rect width={20}
               height={20}
               style={{
                 "file": "rgb(0,0,255)",
                 "strokeWidth": "3",
                 "stroke": "rgb(0,0,87)"
-              }}></rect>*/}
-          <text>159</text>
+              }}></rect>
+          <text>{this.props.nodeData.id}</text>
       </g>
     );
   }
@@ -35,6 +32,7 @@ export default class Nodes extends React.Component {
     super(props);
 
     this.getDefaultStyles = this.getDefaultStyles.bind(this);
+    this.willEnter = this.willEnter.bind(this);
   }
 
   render() {
@@ -42,7 +40,7 @@ export default class Nodes extends React.Component {
       <g>
         <TransitionMotion
           willLeave={this.willLeave.bind(this)}
-          willEnter={this.willEnter.bind(this)}
+          willEnter={this.willEnter}
           styles={this.getStyles.bind(this)}
           defaultStyles={this.getDefaultStyles()}>
           {
@@ -72,7 +70,6 @@ export default class Nodes extends React.Component {
             onNodeClick={onNodeClick}
             onNodeBeginDrag={onNodeBeginDrag}
             onNodeEndDrag={onNodeEndDrag}
-            onNodeDrop={onNodeDrop}
             onNodeDidDrop={onNodeDidDrop}
             nodeData={config.data}
             transformX={config.style.x}
@@ -88,11 +85,11 @@ export default class Nodes extends React.Component {
   }
 
   willEnter(styleThatEntered) {
-    let startingNode = this.props.eventNode;
+    let eventNode = this.props.eventNode;
 
     return {
-      x: startingNode.x0,
-      y: startingNode.y0
+      x: eventNode.x0,
+      y: eventNode.y0
     };
   }
 
@@ -144,6 +141,5 @@ Nodes.propTypes = {
   onNodeClick: React.PropTypes.func.isRequired,
   onNodeBeginDrag: React.PropTypes.func.isRequired,
   onNodeEndDrag: React.PropTypes.func.isRequired,
-  onNodeDrop: React.PropTypes.func.isRequired,
   onNodeDidDrop: React.PropTypes.func.isRequired
 };
