@@ -55,16 +55,13 @@ export default (DecoratedComponent) => {
     }
 
     render() {
-      //onClick={() => { onNodeClick(nodeData) }}
-      /**/
       let {
         connectDragSource,
         connectDropTarget,
-        onNodeClick,
         isDragging,
         nodeData
       } = this.props
-      // console.log(this.props.nodeData)
+
       let transform = this.getTranslate();
       let component = connectDragSource(
       		<g transform={transform}
@@ -84,15 +81,9 @@ export default (DecoratedComponent) => {
 
     getTranslate() {
       let x = 0, y = 0;
-      if(this.props.isDragging) {
-        let offsetX = 0, offsetY = 0;
-        if(this.props.getDifferenceFromInitialOffset !== null){
-          offsetX = this.props.getDifferenceFromInitialOffset.x;
-          offsetY = this.props.getDifferenceFromInitialOffset.y;
-        }
-
-        x = this.props.transformY + offsetX;
-        y = this.props.transformX + offsetY;
+      if(this.props.isDragging && this.props.getDifferenceFromInitialOffset !== null) {
+        x = this.props.transformY + this.props.getDifferenceFromInitialOffset.x;
+        y = this.props.transformX + this.props.getDifferenceFromInitialOffset.y;
       } else {
         x = this.props.transformY;
         y = this.props.transformX;
@@ -115,6 +106,7 @@ export default (DecoratedComponent) => {
         this.setState({
           isClick: true
         });
+        this.props.onNodeClick(this.props.nodeData);
       } else {
         this.setState({
           isClick: false

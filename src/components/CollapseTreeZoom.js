@@ -108,11 +108,6 @@ class CollapseTree extends React.Component {
       y: endingY
     } = droppedNode;
 
-    // tmpNodes.forEach((item) => {
-    //   item.x0 = item.x;
-    //   item.y0 = item.y;
-    // })
-
     var newNodes = this.state.tree.nodes(this.props.source).map((d) => {
       d.y = d.depth * 180;
       return d;
@@ -132,51 +127,51 @@ class CollapseTree extends React.Component {
   }
 
   onNodeClick(node) {
-    // let tmpNodes = this.state.nodes.slice();
-    // let index = tmpNodes.indexOf(node);
-    // let isUpdated = true;
-    //
-    // if(index == -1)
-    //   return;
-    //
-    // if(!!tmpNodes[index].children) {
-    //   tmpNodes[index]._children = tmpNodes[index].children;
-    //   tmpNodes[index].children = undefined;
-    // } else if(!!tmpNodes[index]._children) {
-    //   tmpNodes[index].children = tmpNodes[index]._children;
-    //   tmpNodes[index]._children = undefined;
-    // } else {
-    //   isUpdated = false;
-    // }
-    //
-    // if(isUpdated) {
-    //   let {
-    //     x: endingX,
-    //     y: endingY
-    //   } = node;
-    //
-    //   tmpNodes.forEach((item) => {
-    //     item.x0 = item.x;
-    //     item.y0 = item.y;
-    //   })
-    //
-    //   var newNodes = this.state.tree.nodes(this.props.source).map((d) => {
-    //     d.y = d.depth * 180;
-    //     return d;
-    //   });
-    //   let newLinks = this.state.tree.links(newNodes);
-    //   this.setState({
-    //     nodes: newNodes,
-    //     links: newLinks,
-    //     eventNode: {
-    //       id: node.id,
-    //       x: node.x,
-    //       y: node.y,
-    //       x0: endingX,
-    //       y0: endingY
-    //     }
-    //   });
-    // }
+    let tmpNodes = this.state.nodes.slice();
+    let index = tmpNodes.indexOf(node);
+    let isUpdated = true;
+
+    if(index == -1)
+      return;
+
+    if(!!tmpNodes[index].children) {
+      tmpNodes[index]._children = tmpNodes[index].children;
+      tmpNodes[index].children = undefined;
+    } else if(!!tmpNodes[index]._children) {
+      tmpNodes[index].children = tmpNodes[index]._children;
+      tmpNodes[index]._children = undefined;
+    } else {
+      isUpdated = false;
+    }
+
+    if(isUpdated) {
+      let {
+        x: endingX,
+        y: endingY
+      } = node;
+
+      tmpNodes.forEach((item) => {
+        item.x0 = item.x;
+        item.y0 = item.y;
+      })
+
+      var newNodes = this.state.tree.nodes(this.props.source).map((d) => {
+        d.y = d.depth * 180;
+        return d;
+      });
+      let newLinks = this.state.tree.links(newNodes);
+      this.setState({
+        nodes: newNodes,
+        links: newLinks,
+        eventNode: {
+          id: node.id,
+          x: node.x,
+          y: node.y,
+          x0: endingX,
+          y0: endingY
+        }
+      });
+    }
   }
 };
 
