@@ -1,44 +1,5 @@
 import React, { Component } from 'react';
 import { DragSource, DropTarget } from 'react-dnd';
-import d3 from 'd3';
-
-let nodeDragSource = {
-  canDrag: (props, monitor) => {
-    return typeof(props.nodeData.parent) !== 'string';
-  },
-  beginDrag: (props, monitor, component) => {
-    props.onNodeBeginDrag(props.nodeData);
-    return props.nodeData;
-  },
-  endDrag: (props, monitor, component) => {
-    props.onNodeEndDrag(props.nodeData);
-  }
-};
-
-function dragCollect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-    getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset(),
-    didDrop: monitor.didDrop()
-  };
-};
-
-let dropNodeTarget = {
-  canDrop: function (props, monitor) {
-    return props.nodeData.id !== monitor.getItem().id;
-  },
-  drop: function(props, monitor, component) {
-    props.onNodeDidDrop(props.nodeData, monitor.getItem());
-    return props;
-  }
-};
-
-function collect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget()
-  };
-}
 
 export default (DecoratedComponent) => {
   class Wrapper extends Component {
@@ -112,6 +73,8 @@ export default (DecoratedComponent) => {
           isClick: false
         });
       }
+
+      this.isMouseDown = false;
     }
 
   }
@@ -124,6 +87,44 @@ export default (DecoratedComponent) => {
     nodeData: React.PropTypes.object.isRequired
   };
 
+  let nodeDragSource = {
+    canDrag: (props, monitor) => {
+      return typeof(props.nodeData.parent) !== 'string';
+    },
+    beginDrag: (props, monitor, component) => {
+      props.onNodeBeginDrag(props.nodeData);
+      return props.nodeData;
+    },
+    endDrag: (props, monitor, component) => {
+      props.onNodeEndDrag(props.nodeData);
+    }
+  };
+
+  function dragCollect(connect, monitor) {
+    return {
+      connectDragSource: connect.dragSource(),
+      isDragging: monitor.isDragging(),
+      getDifferenceFromInitialOffset: monitor.getDifferenceFromInitialOffset(),
+      didDrop: monitor.didDrop()
+    };
+  };
+
+  let dropNodeTarget = {
+    canDrop: function (props, monitor) {
+      return props.nodeData.id !== monitor.getItem().id;
+    },
+    drop: function(props, monitor, component) {
+      props.onNodeDidDrop(props.nodeData, monitor.getItem());
+      return props;
+    }
+  };
+
+  function dropCollect(connect, monitor) {
+    return {
+      connectDropTarget: connect.dropTarget()
+    };
+  }
+
   let dndSource = DragSource('Node', nodeDragSource, dragCollect)(Wrapper);
-  return DropTarget('Node', dropNodeTarget, collect)(dndSource);
+  return DropTarget('Node', dropNodeTarget, dropCollect)(dndSource);
 }

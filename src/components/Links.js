@@ -1,37 +1,34 @@
 import React from 'react';
 import { TransitionMotion, spring } from 'react-motion';
-import d3 from 'd3';
-
-const diagonal = d3.svg.diagonal().projection((d) => { return [d.y, d.x]; });
 
 export default class Links extends React.Component {
   constructor(props) {
     super(props);
 
-    this._willEnter = this._willEnter.bind(this);
-    this._willLeave = this._willLeave.bind(this);
-    this._getDefaultStyles = this._getDefaultStyles.bind(this);
-    this._getStyles = this._getStyles.bind(this);
-    this._renderLinks = this._renderLinks.bind(this);
+    this.willEnter = this.willEnter.bind(this);
+    this.willLeave = this.willLeave.bind(this);
+    this.getDefaultStyles = this.getDefaultStyles.bind(this);
+    this.getStyles = this.getStyles.bind(this);
+    this.renderLinks = this.renderLinks.bind(this);
   }
 
   render() {
     return (
       <TransitionMotion
-        willLeave={this._willLeave}
-        willEnter={this._willEnter}
-        styles={this._getStyles}
-        defaultStyles={this._getDefaultStyles()}>
+        willLeave={this.willLeave}
+        willEnter={this.willEnter}
+        styles={this.getStyles}
+        defaultStyles={this.getDefaultStyles()}>
         {
           (interpolatedStyles) => {
-            return this._renderLinks(interpolatedStyles);
+            return this.renderLinks(interpolatedStyles);
           }
         }
       </TransitionMotion>
     );
   }
 
-  _willEnter(styleThatEntered) {
+  willEnter(styleThatEntered) {
     let eventNode = this.props.eventNode;
 
     return {
@@ -42,82 +39,73 @@ export default class Links extends React.Component {
     };
   }
 
-  _willLeave() {
-    let eventNode = this.props.eventNode;
-
+  willLeave() {
     return {
-      x0: spring(eventNode.x),
-      y0: spring(eventNode.y),
-      x: spring(eventNode.x),
-      y: spring(eventNode.y)
+      x0: spring(this.props.eventNode.x),
+      y0: spring(this.props.eventNode.y),
+      x: spring(this.props.eventNode.x),
+      y: spring(this.props.eventNode.y)
     };
   }
 
-  _getDefaultStyles() {
-    let eventNode = this.props.eventNode;
-
+  getDefaultStyles() {
     return this.props.linksData.map((link) => {
-      let style = {
-        x0: eventNode.x0,
-        y0: eventNode.y0,
-        x: eventNode.x0,
-        y: eventNode.y0
-      };
-
       return {
         key: `${link.target.id}`,
-        style: style,
+        style: {
+          x0: this.props.eventNode.x0,
+          y0: this.props.eventNode.y0,
+          x: this.props.eventNode.x0,
+          y: this.props.eventNode.y0
+        },
         data: link
       };
     });
   }
 
-  _getStyles() {
+  getStyles() {
     return this.props.linksData.map((link) => {
-      let style = {
-        x0: spring(link.source.x),
-        y0: spring(link.source.y),
-        x: spring(link.target.x),
-        y: spring(link.target.y)
-      };
-
       return {
         key: `${link.target.id}`,
-        style: style,
+        style: {
+          x0: spring(link.source.x),
+          y0: spring(link.source.y),
+          x: spring(link.target.x),
+          y: spring(link.target.y)
+        },
         data: link
       };
     });
   }
 
-  _renderLinks(interpolatedStyles) {
-    let linkSet = interpolatedStyles.map((config) => {
-      let source = {
-        x: config.style.x0,
-        y: config.style.y0
-      };
-      let target = {
-        x: config.style.x,
-        y: config.style.y
-      };
-      let d = diagonal({
-        source: source,
-        target: target
-      });
-      let isParent = this.props.isDragging ? (this.props.eventNode.id == config.data.target.id) : false;
-      let isDisplay = config.data.target.isDisplay && !isParent;
-
-      return (
-        <path key={config.key}
-              style={{
-                display: isDisplay ? '' : 'none'
-              }}
-              d={d} />
-      );
-    });
-
+  renderLinks(interpolatedStyles) {
     return (
       <g>
-        {linkSet}
+        {
+          interpolatedStyles.map((config) => {
+            let axis = this.props.getAxis(config.style);
+            let d = this.props.diagonal({
+              source: {
+                x: config.style.x0,
+                y: config.style.y0
+              },
+              target: {
+                x: axis[0],
+                y: axis[1]
+              }
+            });
+            let isParent = this.props.isDragging ? (this.props.eventNode.id == config.data.target.id) : false;
+            let isDisplay = config.data.target.isDisplay && !isParent;
+
+            return (
+              <path key={config.key}
+                    style={{
+                      display: isDisplay ? '' : 'none'
+                    }}
+                    d={d} />
+            );
+          })
+        }
       </g>
     );
   }
