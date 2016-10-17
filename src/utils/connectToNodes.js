@@ -31,10 +31,12 @@ export default (DecoratedComponent) => {
             }}
             onMouseDown={this.onMouseDown.bind(this)}
             onMouseMove={this.onMouseMove.bind(this)}
-            onMouseUp={this.onMouseUp.bind(this)}>
+            onMouseUp={this.onMouseUp.bind(this)}
+          >
       			<DecoratedComponent
-                {...this.props}
-                {...this.state} />
+              {...this.props}
+              {...this.state}
+            />
       		</g>);
 
       return connectDropTarget(component);
@@ -59,11 +61,15 @@ export default (DecoratedComponent) => {
     }
 
     onMouseMove() {
-      this.isMouseMoving = true;
+      if(this.isMouseDown) {
+        this.isMouseMoving = true;
+      } else {
+        this.isMouseMoving = false;
+      }
     }
 
     onMouseUp() {
-      if(this.isMouseDown && !this.isMouseMoving) {
+      if(this.isMouseDown) {
         this.setState({
           isClick: true
         });

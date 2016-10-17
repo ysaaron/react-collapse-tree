@@ -3,12 +3,17 @@ import React from 'react';
 import CollapseTreeZoom from './CollapseTreeZoom';
 import data from '../data/mock.json';
 
-class Main extends React.Component {
+class AppComponent extends React.Component {
   render() {
     return (
-      <CollapseTreeZoom source={data} />
+      <div className="index">
+        <CollapseTreeZoom source={data} />
+      </div>
     );
   }
 }
 
-export default Main;
+AppComponent.defaultProps = {
+};
+
+export default AppComponent;

@@ -1,36 +1,34 @@
 import React from 'react';
+import d3 from 'd3';
 import { DragDropContext } from 'react-dnd';
 import MouseEventBackend from 'react-dnd-mouse-backend';
 
-import { walkThroughTree, removeNodeFromParent, collapseTree, moveNodeToOtherNode } from '../utils/walkThroughTree';
-import { getTreeHandler, diagonal } from '../utils/treeHandler';
+import { walkThroughTree } from '../utils/walkThroughTree';
 
 import SvgChart from './SvgChart';
 import Links from './Links';
 import Nodes from './Nodes';
 
-let tree = undefined;
-let dia = undefined;
-
 class CollapseTree extends React.Component {
   constructor(props) {
     super(props);
 
-    tree = getTreeHandler([this.props.height, this.props.width], this.props.getChildren);
-    let nodes = tree.nodes(this.props.source).map((d, index) => {
+    var tree = d3.layout.tree().size([this.props.height, this.props.width]),
+        nodes = tree.nodes(this.props.source),
+        links = tree.links(nodes);
+
+    nodes.forEach((d, index) => {
+      d._children = undefined;
       d.id = index;
-      let axis = props.getAxis(d);
-      d.x = axis[0];
-      d.y = axis[1];
+      d.y = d.depth * 180;
       d.x0 = d.x;
       d.y0 = d.y;
       d.isDisplay = true;
-      return d;
-    }),
-    links = tree.links(nodes);
+    });
 
     this.state = {
       isDragging: false,
+      tree: tree,
       nodes: nodes,
       links: links,
       eventNode: nodes[0]
@@ -39,26 +37,29 @@ class CollapseTree extends React.Component {
 
   render() {
     return (
-      <SvgChart height={this.props.height}
-                width={this.props.width}
-                blockZooming={this.state.isDragging}>
-        <Links linksData={this.state.links}
-                eventNode={this.state.eventNode}
-                isDragging={this.state.isDragging}
-                diagonal={diagonal(this.props.getAxis)}
-                getAxis={this.props.getAxis} />
-        <Nodes nodesData={this.state.nodes}
-                eventNode={this.state.eventNode}
-                onNodeClick={this.onNodeClick.bind(this)}
-                onNodeBeginDrag={this.onNodeBeginDrag.bind(this)}
-                onNodeEndDrag={this.onNodeEndDrag.bind(this)}
-                onNodeDidDrop={this.onNodeDidDrop.bind(this)}
-                getAxis={this.props.getAxis} />
+      <SvgChart
+        height={this.props.height}
+        width={this.props.width}
+        blockZooming={this.state.isDragging}
+        >
+        <Links
+          linksData={this.state.links}
+          eventNode={this.state.eventNode}
+          isDragging={this.state.isDragging}
+        />
+        <Nodes
+          nodesData={this.state.nodes}
+          eventNode={this.state.eventNode}
+          onNodeClick={this.handleNodeClick.bind(this)}
+          onNodeBeginDrag={this.handleNodeBeginDrag.bind(this)}
+          onNodeEndDrag={this.handleNodeEndDrag.bind(this)}
+          onNodeDidDrop={this.handleNodeDidDrop.bind(this)}
+        />
       </SvgChart>
     );
   }
 
-  onNodeBeginDrag(node) {
+  handleNodeBeginDrag(node) {
     walkThroughTree(node, (item) => { return item.children; }, (item) => { item.isDisplay = false; });
 
     let {
@@ -79,7 +80,7 @@ class CollapseTree extends React.Component {
     });
   }
 
-  onNodeEndDrag(node) {
+  handleNodeEndDrag(node) {
     walkThroughTree(node, (item) => { return item.children; }, (item) => { item.isDisplay = true; });
 
     this.setState({
@@ -87,31 +88,40 @@ class CollapseTree extends React.Component {
     });
   }
 
-  onNodeDidDrop(droppedNode, draggedNode) {
+  handleNodeDidDrop(droppedNode, draggedNode) {
     let tmpNodes = this.state.nodes.slice();
-    let droppedIndex = tmpNodes.indexOf(droppedNode), draggedIndex = tmpNodes.indexOf(draggedNode);
+    let droppedIndex = tmpNodes.indexOf(droppedNode);
+    let draggedIndex = tmpNodes.indexOf(draggedNode);
 
     if(droppedIndex == -1 || draggedIndex == -1)
       return;
+    //move node to another node
+    if(!!tmpNodes[droppedIndex].children) {
+      droppedNode.children.push(draggedNode);
+    } else if(!!tmpNodes[droppedIndex]._children) {
+      droppedNode._children.push(draggedNode);
+    } else {
+      droppedNode.children = [];
+      droppedNode.children.push(draggedNode);
+    }
 
-    moveNodeToOtherNode(droppedNode, draggedNode);
-    removeNodeFromParent(draggedNode);
+    //remove draggedNode from parant
+    let indexInParant = draggedNode.parent.children.indexOf(draggedNode);
+    draggedNode.parent = draggedNode.parent.children.splice(indexInParant, 1);
 
     let {
       x: endingX,
       y: endingY
     } = droppedNode;
 
-    let newNodes = tree.nodes(this.props.source).map((d) => {
-      let axis = this.props.getAxis(d);
-      d.x = axis[0];
-      d.y = axis[1];
+    var newNodes = this.state.tree.nodes(this.props.source).map((d) => {
+      d.y = d.depth * 180;
       return d;
     });
-
+    let newLinks = this.state.tree.links(newNodes);
     this.setState({
       nodes: newNodes,
-      links: tree.links(newNodes),
+      links: newLinks,
       eventNode: {
         id: droppedNode.id,
         x: droppedNode.x,
@@ -122,59 +132,66 @@ class CollapseTree extends React.Component {
     });
   }
 
-  onNodeClick(node) {
+  handleNodeClick(node) {
     let tmpNodes = this.state.nodes.slice();
     let index = tmpNodes.indexOf(node);
+    let isUpdated = true;
 
     if(index == -1)
       return;
 
-    collapseTree(node);
+    if(!!tmpNodes[index].children) {
+      tmpNodes[index]._children = tmpNodes[index].children;
+      tmpNodes[index].children = undefined;
+    } else if(!!tmpNodes[index]._children) {
+      tmpNodes[index].children = tmpNodes[index]._children;
+      tmpNodes[index]._children = undefined;
+    } else {
+      isUpdated = false;
+    }
 
-    let {
-      x: endingX,
-      y: endingY
-    } = node;
+    if(isUpdated) {
+      let {
+        x: endingX,
+        y: endingY
+      } = node;
 
-    tmpNodes.forEach((item) => {
-      item.x0 = item.x;
-      item.y0 = item.y;
-    })
+      tmpNodes.forEach((item) => {
+        item.x0 = item.x;
+        item.y0 = item.y;
+      })
 
-    let newNodes = tree.nodes(this.props.source).map((d) => {
-      let axis = this.props.getAxis(d);
-      d.x = axis[0];
-      d.y = axis[1];
-      return d;
-    });
-
-    this.setState({
-      nodes: newNodes,
-      links: tree.links(newNodes),
-      eventNode: {
-        id: node.id,
-        x: node.x,
-        y: node.y,
-        x0: endingX,
-        y0: endingY
-      }
-    });
+      var newNodes = this.state.tree.nodes(this.props.source).map((d) => {
+        d.y = d.depth * 180;
+        return d;
+      });
+      let newLinks = this.state.tree.links(newNodes);
+      this.setState({
+        nodes: newNodes,
+        links: newLinks,
+        eventNode: {
+          id: node.id,
+          x: node.x,
+          y: node.y,
+          x0: endingX,
+          y0: endingY
+        }
+      });
+    }
   }
 };
 
 CollapseTree.propTypes = {
   source: React.PropTypes.object.isRequired,
-  getChildren: React.PropTypes.func,
-  getAxis: React.PropTypes.func,
   height: React.PropTypes.number,
   width: React.PropTypes.number,
+  depth: React.PropTypes.number
 };
 
 CollapseTree.defaultProps = {
-  height: 500,
-  width: 500,
-  getChildren: (node) => { return node.children; },
-  getAxis: (node) => { return [node.x, node.y] }
+  height: 1000,
+  width: 1000,
+  depth: 1
 }
 
 export default DragDropContext(MouseEventBackend)(CollapseTree);

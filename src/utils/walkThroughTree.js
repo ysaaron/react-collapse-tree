@@ -1,10 +1,3 @@
-/**
- * To walk the substree of the node
- * @param {Node} node Target node to walk through the sub-tree
- * @param {function()} getChildren A callback to get the node children
- * @param {function} cb Providing callback when walking through the tree
- * @return
- */
 export function walkThroughTree(node, getChildren = () => {}, cb = () => {}) {
   let children = getChildren(node);
   if(!children || children == null)

@@ -63,23 +63,23 @@ export default class Nodes extends React.Component {
       onNodeDidDrop
     } = this.props;
 
+    let nodes = interpolatedStyles.map((config) => {
+      return (
+          <DragWrapper
+            key={config.key}
+            onNodeClick={onNodeClick}
+            onNodeBeginDrag={onNodeBeginDrag}
+            onNodeEndDrag={onNodeEndDrag}
+            onNodeDidDrop={onNodeDidDrop}
+            nodeData={config.data}
+            transformX={config.style.x}
+            transformY={config.style.y} />
+      );
+    });
+
     return (
       <g>
-        {
-          interpolatedStyles.map((config) => {
-            return (
-                <DragWrapper
-                  key={config.key}
-                  onNodeClick={onNodeClick}
-                  onNodeBeginDrag={onNodeBeginDrag}
-                  onNodeEndDrag={onNodeEndDrag}
-                  onNodeDidDrop={onNodeDidDrop}
-                  nodeData={config.data}
-                  transformX={config.style.x}
-                  transformY={config.style.y} />
-            );
-          })
-        }
+        {nodes}
       </g>
     );
   }
@@ -94,19 +94,23 @@ export default class Nodes extends React.Component {
   }
 
   willLeave() {
+    let eventNode = this.props.eventNode;
+
     return {
-      x: spring(this.props.eventNode.x),
-      y: spring(this.props.eventNode.y)
+      x: spring(eventNode.x),
+      y: spring(eventNode.y)
     };
   }
 
   getDefaultStyles() {
+    let eventNode = this.props.eventNode;
+
     return this.props.nodesData.map((node) => {
       return {
         key: `${node.id}`,
         style: {
-          x: this.props.eventNode.x0,
-          y: this.props.eventNode.y0
+          x: eventNode.x0,
+          y: eventNode.y0
         },
         data: node
       };
@@ -115,12 +119,15 @@ export default class Nodes extends React.Component {
 
   getStyles() {
     return this.props.nodesData.map((node) => {
+      let key = node.id;
+      let style = {
+        x: spring(node.x),
+        y: spring(node.y)
+      };
+
       return {
-        key: `${node.id}`,
-        style: {
-          x: spring(node.x),
-          y: spring(node.y)
-        },
+        key: `${key}`,
+        style: style,
         data: node
       };
     });

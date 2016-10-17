@@ -1,8 +1,6 @@
-let webpackDevServer = require('webpack-dev-server');
 let webpack = require('webpack');
 let path = require('path');
 let express = require('express');
-let request = require('request');
 let webpackDevMiddleware = require('webpack-dev-middleware');
 let webpackHotMiddleware = require('webpack-hot-middleware');
 
