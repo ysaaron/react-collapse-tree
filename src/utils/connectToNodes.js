@@ -29,9 +29,7 @@ export default (DecoratedComponent) => {
             style={{
               display: nodeData.isDisplay ? '' : 'none'
             }}
-            onMouseDown={this.onMouseDown.bind(this)}
-            onMouseMove={this.onMouseMove.bind(this)}
-            onMouseUp={this.onMouseUp.bind(this)}
+            onClick={ () => this.props.onNodeClick(this.props.nodeData) }
           >
       			<DecoratedComponent
               {...this.props}
@@ -54,35 +52,6 @@ export default (DecoratedComponent) => {
 
       return `translate(${x}, ${y})`;
     }
-
-    onMouseDown() {
-      this.isMouseDown = true;
-      this.isMouseMoving = false;
-    }
-
-    onMouseMove() {
-      if(this.isMouseDown) {
-        this.isMouseMoving = true;
-      } else {
-        this.isMouseMoving = false;
-      }
-    }
-
-    onMouseUp() {
-      if(this.isMouseDown) {
-        this.setState({
-          isClick: true
-        });
-        this.props.onNodeClick(this.props.nodeData);
-      } else {
-        this.setState({
-          isClick: false
-        });
-      }
-
-      this.isMouseDown = false;
-    }
-
   }
 
   Wrapper.propsTypes = {

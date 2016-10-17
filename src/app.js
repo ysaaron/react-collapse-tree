@@ -1,5 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './components/Main';
 
-ReactDOM.render(<App />, document.getElementById('app'));
+import CollapseTreeZoom from './components/CollapseTreeZoom';
+import data from './data/mock.json';
+
+ReactDOM.render(<CollapseTreeZoom source={data} />, document.getElementById('app'));
