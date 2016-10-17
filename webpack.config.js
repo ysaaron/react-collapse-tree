@@ -1,32 +1,55 @@
-'use strict';
+let webpack = require('webpack');
+let path = require('path');
 
-const path = require('path');
-const args = require('minimist')(process.argv.slice(2));
+const PORT = 3000;
 
-// List of allowed environments
-const allowedEnvs = ['dev', 'dist', 'test'];
+module.exports = {
+  devtool: 'cheap-module-eval-source-map',
 
-// Set the correct environment
-let env;
-if (args._.length > 0 && args._.indexOf('start') !== -1) {
-  env = 'test';
-} else if (args.env) {
-  env = args.env;
-} else {
-  env = 'dev';
+  entry: {
+    main: [
+      `webpack-hot-middleware/client?http://localhost:${PORT}`,
+      'webpack/hot/only-dev-server',
+      'react-hot-loader/patch',
+      './src/app.js'
+    ]
+  },
+
+  output: {
+    path: path.resolve(__dirname, './static'),
+    filename: '[name].js',
+    chunckFilename: '[name].chunck.js',
+    publicPath: '/static/'
+  },
+
+  module: {
+    loaders: [
+      {
+        test: /\.(js|jsx)$/,
+        loaders: ['react-hot-loader/webpack', 'babel'],
+        exclude: /node_modules/
+      },
+      {
+        test: /\.(scss|css)$/,
+        loaders: ['style', 'css?modules', 'postcss-loader']
+      },
+      {
+        test: /\.json$/,
+        loaders: ['json']
+      }
+    ]
+  },
+
+  postcss: () => ([
+      require('autoprefixer'),
+      require('precss')
+  ]),
+
+  plugins: [
+    new webpack.HotModuleReplacementPlugin()
+  ],
+
+  resolve: {
+    extentions: ['', 'js', 'jsx']
+  }
 }
-process.env.REACT_WEBPACK_ENV = env;
-
-/**
- * Build the webpack configuration
- * @param  {String} wantedEnv The wanted environment
- * @return {Object} Webpack config
- */
-function buildConfig(wantedEnv) {
-  let isValid = wantedEnv && wantedEnv.length > 0 && allowedEnvs.indexOf(wantedEnv) !== -1;
-  let validEnv = isValid ? wantedEnv : 'dev';
-  let config = require(path.join(__dirname, 'cfg/' + validEnv));
-  return config;
-}
-
-module.exports = buildConfig(env);

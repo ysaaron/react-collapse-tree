@@ -17,7 +17,6 @@ class CollapseTree extends React.Component {
     super(props);
 
     tree = getTreeHandler([this.props.height, this.props.width], this.props.getChildren);
-    console.log(dia)
     let nodes = tree.nodes(this.props.source).map((d, index) => {
       d.id = index;
       let axis = props.getAxis(d);
